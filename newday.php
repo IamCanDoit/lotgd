@@ -241,6 +241,7 @@ if ($dp < $dkills) {
 	if ($interest_amount != 0) {
 		debuglog(($interest_amount >= 0 ? "earned " : "paid ") . abs($interest_amount) . " gold in interest");
 	}
+	$session['user']['goldinbank']+=$interest_amount;
 	$turnstoday .= ", Spirits: $resurrectionturns, DK: $dkff";
 	$session['user']['turns']=$turnsperday+$resurrectionturns+$dkff;
 	$session['user']['hitpoints'] = $session['user']['maxhitpoints'];
