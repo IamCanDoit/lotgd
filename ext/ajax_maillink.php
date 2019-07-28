@@ -9,10 +9,10 @@ $(window).ready(function(){
 		});
 function set_mail_ajax() {
 	active_mail_interval=window.setInterval('".rq()->call('mail_status',1)."',".($check_mail_timeout_seconds*1000).");
+	active_commentary_interval=window.setInterval('".addslashes(rq()->call('commentary_text',1))."',".($check_chat_timeout_seconds*1000).");
 }
 function set_timeout_ajax() {
 	active_timeout_interval=window.setInterval('".rq()->call('timeout_status',1)."',".($check_timeout_seconds*1000).");
-	active_commentary_interval=window.setInterval('".addslashes(rq()->call('commentary_text',1))."',".($check_chat_timeout_seconds*1000).");
 }
 function clear_ajax() {
 	window.clearInterval(active_timeout_interval);

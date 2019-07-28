@@ -200,6 +200,8 @@ function viewcommentary($section,$message="Interject your own commentary?",$limi
 	if ($scriptname_pre===false) {
 		//most likely no ajax
 		$scriptname = $_SERVER['SCRIPT_NAME'];
+	} else {
+		$scriptname = $scriptname_pre;
 	}
 
 	if ($_SERVER['REQUEST_URI']=="/ext/ajax_process.php") {
