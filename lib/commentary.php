@@ -190,11 +190,30 @@ function commentdisplay($intro, $section, $message="Interject your own commentar
 	viewcommentary($section, $message, $limit, $talkline, $schema);
 }
 
-function viewcommentary($section,$message="Interject your own commentary?",$limit=10,$talkline="says",$schema=false,$viewonly=false,$returnastext=false) {
+function viewcommentary($section,$message="Interject your own commentary?",$limit=10,$talkline="says",$schema=false,$viewonly=false,$returnastext=false,$scriptname_pre=false) {
  	global $session,$REQUEST_URI,$doublepost, $translation_namespace;
 	global $emptypost;
 
-	rawoutput("<div id='$section'>");
+	//some words on AJAX requests
+	//the handling here is easy for website admins, not very great for developer
+	//SCRIPT_NAME is bad if you want to use an AJAX handling, also we need the return value for our object response
+	if ($scriptname_pre===false) {
+		//most likely no ajax
+		$scriptname = $_SERVER['SCRIPT_NAME'];
+	}
+
+	if ($_SERVER['REQUEST_URI']=="/ext/ajax_process.php") {
+		//this is an AJAX call, set request uri from last uri known in session for chat
+		$real_request_uri = $session['last_comment_request_uri'];
+	} else {
+		$real_request_uri = $_SERVER['REQUEST_URI'];
+		$session['last_comment_request_uri'] = $real_request_uri;
+	}
+
+	$session['last_comment_section'] = $section;
+	$session['last_comment_scriptname'] = $scriptname;
+
+	rawoutput("<div id='$section-comment'>");
 	if ($returnastext!==false) {
 		// buffer
 		global $output;
@@ -213,8 +232,8 @@ function viewcommentary($section,$message="Interject your own commentary?",$limi
 	tlschema("commentary");
 
 	$nobios = array("motd.php"=>true);
-	if (!array_key_exists(basename($_SERVER['SCRIPT_NAME']),$nobios)) $nobios[basename($_SERVER['SCRIPT_NAME'])] = false;
-	if ($nobios[basename($_SERVER['SCRIPT_NAME'])])
+	if (!array_key_exists(basename($scriptname),$nobios)) $nobios[basename($scriptname)] = false;
+	if ($nobios[basename($scriptname)])
 		$linkbios=false;
 	else
 		$linkbios=true;
@@ -272,7 +291,7 @@ function viewcommentary($section,$message="Interject your own commentary?",$limi
 			"( ".db_prefix("accounts") . ".locked=0 OR ".db_prefix("accounts") .".locked is null ) ".
 			"ORDER BY commentid DESC LIMIT " .
 			($com*$limit).",$limit";
-		if ($com==0 && strstr( $_SERVER['REQUEST_URI'], "/moderate.php" ) !== $_SERVER['REQUEST_URI'] )
+		if ($com==0 && strstr( $real_request_uri, "/moderate.php" ) !== $real_request_uri )
 			$result = db_query_cached($sql,"comments-{$section}");
 		else
 			$result = db_query($sql);
@@ -323,7 +342,7 @@ function viewcommentary($section,$message="Interject your own commentary?",$limi
 		}
 
 		$link = "bio.php?char=" . $row['acctid'] .
-			"&ret=".URLEncode($_SERVER['REQUEST_URI']);
+			"&ret=".URLEncode($real_request_uri);
 
 		if (substr($ft,0,2)=="::")
 			$ft = substr($ft,0,2);
@@ -410,9 +429,9 @@ function viewcommentary($section,$message="Interject your own commentary?",$limi
 	$sect="x";
 
 	$del=translate_inline("Del");
-	$scriptname=substr($_SERVER['SCRIPT_NAME'],strrpos($_SERVER['SCRIPT_NAME'],"/")+1);
-	$pos=strpos($_SERVER['REQUEST_URI'],"?");
-	$return=$scriptname.($pos==false?"":substr($_SERVER['REQUEST_URI'],$pos));
+	$scriptname=substr($scriptname,strrpos($scriptname,"/")+1);
+	$pos=strpos($real_request_uri,"?");
+	$return=$scriptname.($pos==false?"":substr($real_request_uri,$pos));
 	$one=(strstr($return,"?")==false?"?":"&");
 
 	$editrights=($session['user']['superuser'] & SU_EDIT_COMMENTS?1:0);
@@ -427,6 +446,7 @@ function viewcommentary($section,$message="Interject your own commentary?",$limi
 			$outputcomments[$sect]=array();
 		array_push($outputcomments[$sect],$out);
 	}
+
 
 	//output the comments
 	ksort($outputcomments);
@@ -455,10 +475,20 @@ function viewcommentary($section,$message="Interject your own commentary?",$limi
 		}
 	}
 
+	//if we only need the comments, we are done here
+	if ($returnastext!==false) {
+		$collected = $output->get_output();
+		$output=$oldoutput;
+		return $collected;
+
+	}
+	rawoutput("</div>");
+	rawoutput("<div id='$section-talkline'>"); //close section
+
 	if ($session['user']['loggedin'] && !$viewonly) {
 		talkline($section,$talkline,$limit,$schema,$counttoday,$message);
 	}
-
+	rawoutput("</div><div id='$section-nav'>");
 	$jump = false;
 	if (!isset($session['user']['prefs']['nojump']) || $session['user']['prefs']['nojump'] == false) {
 		$jump = true;
@@ -532,13 +562,7 @@ function viewcommentary($section,$message="Interject your own commentary?",$limi
 	if (!$cc) db_free_result($result);
 	tlschema();
 	if ($needclose) modulehook("}collapse");
-	if ($returnastext!==false) {
-		$collected = $output->get_output();
-		$output=$oldoutput;
-		return $collected;
-
-	}
-	rawoutput("</div>"); //close section
+	rawoutput("</div>"); //close nav section
 }
 
 function talkline($section,$talkline,$limit,$schema,$counttoday,$message) {

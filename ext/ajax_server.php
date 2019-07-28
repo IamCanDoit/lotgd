@@ -95,16 +95,19 @@ function timeout_status($args=false) {
 
 function commentary_text($args=false) {
 	global $session;
-	if ($args===false || !is_array($args)) return;
-	$section=$args['section'];
+	chdir("..");
+	require_once("lib/commentary.php");
+	if ($args===false)  return;
+	$section = $session['last_comment_section'];
+	$scriptname = $session['last_comment_scriptname'];
 	$message="";
 	$limit=25;
 	$talkline="says";
 	$schema=$args['schema'];
 	$viewonly=$args['viewonly'];	
-	$new=viewcommentary($section, $message, $limit, $talkline, $schema,$viewonly,1);
-	$new=maillink();
+	$new=viewcommentary($section, $message, $limit, $talkline, $schema,$viewonly,1,$scriptname);
 	$objResponse = new Response();
-	$objResponse->assign($section,"innerHTML", $new);
+	$objResponse->assign($section."-comment","innerHTML", $new);
+	return $objResponse;
 }
 

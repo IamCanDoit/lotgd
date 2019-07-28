@@ -12,10 +12,12 @@ function set_mail_ajax() {
 }
 function set_timeout_ajax() {
 	active_timeout_interval=window.setInterval('".rq()->call('timeout_status',1)."',".($check_timeout_seconds*1000).");
+	active_commentary_interval=window.setInterval('".addslashes(rq()->call('commentary_text',1))."',".($check_chat_timeout_seconds*1000).");
 }
 function clear_ajax() {
 	window.clearInterval(active_timeout_interval);
 	window.clearInterval(active_mail_interval);
+	window.clearInterval(active_commentary_interval);
 }
 </script>";
 
