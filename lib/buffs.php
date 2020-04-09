@@ -206,6 +206,7 @@ function apply_companion($name,$companion,$ignorelimit=false){
 		if (!isset($companion['ignorelimit']) && $ignorelimit == true) {
 			$companion['ignorelimit'] = true;
 		}
+		$companion['hitpoints'] = $companion['maxhitpoints'];
 		$companions[$name] = $companion;
 		$session['user']['companions'] = createstring($companions);
 		return true; // success!
