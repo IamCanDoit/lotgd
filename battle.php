@@ -136,7 +136,10 @@ if ($op != "run" && $op != "fight" && $op != "newtarget") {
 		// being surprised to all fights.
 		if (!array_key_exists('didsurprise',$options) || !$options['didsurprise']) {
 			// By default, surprise is 50/50
-			$surprised = e_rand(0, 1) ? true : false;
+			$surprise_chance = e_rand(0,1);
+			// allows us to modify surprise via modules, always on, or off or 25% or 75%, anything
+			$surprise_chance = modulehook('modify_surprise_chance',$surprise_chance);
+			$surprised = $surprise_chance ? true : false;
 			// Now, adjust for slum/thrill
 			$type = httpget('type');
 			if ($type == 'slum' || $type == 'thrill') {
