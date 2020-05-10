@@ -37,8 +37,21 @@ function rolldamage(&$badguy){
 		
 		while(!isset($creaturedmg) || !isset($selfdmg) || $creaturedmg==0 && $selfdmg==0){
 			$atk = get_player_attack()*$atkmod;
-			//power attack in all 20 turns
-			if (e_rand(1,20)==1 && $options['type'] != "pvp") $atk*=2;
+			
+			// power attack in all 20 turns
+			// by default chance is 5%
+			// modify min or max to increase or decrease chance
+			// 1/20 is 5%, 2/20 is 10%, 1/19 is 5.3%, 2/19 is 10.5%
+			
+			$args = array('critical_chance'=>false,'min'=>1,'max'=>20);
+			$args = modulehook('modify_critical_chance',$args);
+			
+			if( e_rand($args['min'],$args['max']) === 1 && $args['critical_chance'] === false ) 
+			{
+				$args['critical_chance'] = true;
+			}
+			
+			if ( $args['critical_chance'] && $options['type'] != "pvp" ) $atk*=2;
 			/*
 			debug("Attack score: $atk");
 			*/
